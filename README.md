@@ -12,12 +12,18 @@ import board, neopixel
 from simpleio import map_range
 import pwmio
 from adafruit_motor import servo, motor
-from dmx_receiver import DmxReceiver # Copy files from https://github.com/mydana/CircuitPython_DMX_Receiver onto lib folder
+
+# Copy files from https://github.com/mydana/CircuitPython_DMX_Receiver onto lib folder
+from dmx_receiver import DmxReceiver 
+
 DMX_PIN = board.GP1 # Módulo RS 485
 PIXEL_PIN = board.GP18 # neopixel on board, dois LEDS RGB
 
 # Read 16 sequential channels from DMX starting at Slot 0
 dmx_receiver = DmxReceiver(pin=DMX_PIN, slot=0) 
+       # pin: The pin to retrieve data from.
+       # dmx_basis: If True start slot numbers at 1 not 0. - Use true, to follow DMX Channel standards
+       # slot: The first DMX slot of 16 to listen for.
 
 # Neopixel Setup
 pixels = neopixel.NeoPixel(PIXEL_PIN, 2)
@@ -43,7 +49,7 @@ servo4 = servo.Servo(servo_pwm4)
 
 for data in dmx_receiver:
     if data is not None:
-        # Converte os bytes para uma lista de inteiros
+        # Convert Bytes to a Integer List - Debug only
         dmx_list = list(data)
         print(dmx_list)
         
@@ -56,8 +62,7 @@ for data in dmx_receiver:
         pixels[0] = (color_red, color_green, color_blue)
         pixels[1] = (color_red, color_green, color_blue)        
         pixels.show()
-        
-        
+       
         # Channels 5 to 8, Four Servo positions
         servo1.angle = map_range (dmx_list[4], 0,255, 0,180) # Channel 5
         servo2.angle = map_range (dmx_list[5], 0,255, 0,180) # Channel 6
@@ -68,9 +73,8 @@ for data in dmx_receiver:
         motor1_speed = map_range(dmx_list[8], 0,255,0, 1.0) # Channel 9
         motor1_direction = dmx_list[9] # Channel 10
         
-
         if motor1_speed == 0:
-            motor1.throttle = None
+            motor1.throttle = None # Shutdown Motor
         else:
             if motor1_direction in range (0,127):
                 motor1.throttle = motor1_speed
